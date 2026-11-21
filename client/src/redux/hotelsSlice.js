@@ -4,19 +4,21 @@ import axios from 'axios';
 // Async thunks for hotel API calls
 export const fetchHotels = createAsyncThunk(
   'hotels/fetchHotels',
-  async (_, { getState, rejectWithValue }) => {
+  async (filtersArg, { getState, rejectWithValue }) => {
     try {
-      const { filters } = getState().hotels;
-      const offset = (filters.page - 1) * filters.limit;
+      const filters = filtersArg || getState().hotels.filters;
+      const limit = filters.limit || 6;
+      const page = filters.page || 1;
+      const offset = (page - 1) * limit;
 
       const params = {
-        limit: filters.limit,
+        limit: limit,
         offset: offset,
       };
 
       if (filters.search) params.search = filters.search;
-      if (filters.minPrice !== '') params.minPrice = filters.minPrice;
-      if (filters.maxPrice !== '') params.maxPrice = filters.maxPrice;
+      if (filters.minPrice !== '' && filters.minPrice !== undefined) params.minPrice = filters.minPrice;
+      if (filters.maxPrice !== '' && filters.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
 
       const response = await axios.get('/api/hotels', { params });
       return response.data;

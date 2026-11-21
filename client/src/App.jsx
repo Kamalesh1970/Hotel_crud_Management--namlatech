@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import HotelListPage from './pages/HotelListPage';
-import AddHotelPage from './pages/AddHotelPage';
-import EditHotelPage from './pages/EditHotelPage';
-import HotelDetailPage from './pages/HotelDetailPage';
+import Home from './pages/Home';
+import AddHotel from './pages/AddHotel';
+import EditHotel from './pages/EditHotel';
+import HotelDetail from './pages/HotelDetail';
 import './App.css';
 
 function App() {
@@ -13,10 +13,10 @@ function App() {
         <Navbar />
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<HotelListPage />} />
-            <Route path="/add" element={<AddHotelPage />} />
-            <Route path="/edit/:id" element={<EditHotelPage />} />
-            <Route path="/hotel/:id" element={<HotelDetailPage />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/add" element={<AddHotel />} />
+            <Route path="/edit/:id" element={<EditHotel />} />
+            <Route path="/hotel/:id" element={<HotelDetail />} />
           </Routes>
         </main>
       </div>
@@ -25,4 +25,3 @@ function App() {
 }
 
 export default App;
-
