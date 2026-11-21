@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
@@ -58,11 +58,14 @@ function EditHotel() {
 
   if (notFound || !hotelData) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
+      <div className="page-container status-container">
         <h2>Hotel Not Found</h2>
-        <p style={{ marginTop: '0.5rem', color: '#64748b' }}>
+        <p className="status-subtext">
           The hotel with ID #{id} does not exist or has been removed.
         </p>
+        <Link to="/" className="nav-button">
+          Back to list
+        </Link>
       </div>
     );
   }
@@ -72,6 +75,12 @@ function EditHotel() {
       <Helmet>
         <title>Edit Hotel | Hotel Management</title>
       </Helmet>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <Link to="/" className="back-link">
+          &larr; Back to list
+        </Link>
+      </div>
 
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>
         Edit Hotel #{id}

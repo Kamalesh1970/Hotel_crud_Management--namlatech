@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { addHotel } from '../redux/hotelsSlice';
 import HotelForm from '../components/HotelForm';
@@ -28,6 +28,12 @@ function AddHotel() {
       <Helmet>
         <title>Add Hotel | Hotel Management</title>
       </Helmet>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <Link to="/" className="back-link">
+          &larr; Back to list
+        </Link>
+      </div>
 
       <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Add New Hotel</h2>
 

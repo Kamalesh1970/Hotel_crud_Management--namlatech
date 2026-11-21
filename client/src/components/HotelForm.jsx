@@ -1,5 +1,47 @@
 import { useState, useEffect } from 'react';
-import './HotelForm.css';
+
+const placeholderImage =
+  'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22250%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20250%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22400%22%20height%3D%22250%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Ctext%20x%3D%22200%22%20y%3D%22125%22%20fill%3D%22%2364748b%22%20font-size%3D%2216%22%20font-family%3D%22sans-serif%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
+
+function validate(values, isEdit = false) {
+  const newErrors = {};
+
+  if (!values.title || values.title.trim().length < 3) {
+    newErrors.title = 'Title is required (minimum 3 characters)';
+  }
+
+  if (!values.description || values.description.trim().length < 10) {
+    newErrors.description = 'Description is required (minimum 10 characters)';
+  }
+
+  const numPrice = Number(values.price);
+  if (!values.price || isNaN(numPrice) || numPrice <= 0) {
+    newErrors.price = 'Price is required and must be greater than 0';
+  }
+
+  const numLat = Number(values.latitude);
+  if (values.latitude === '' || isNaN(numLat) || numLat < -90 || numLat > 90) {
+    newErrors.latitude = 'Latitude is required (between -90 and 90)';
+  }
+
+  const numLng = Number(values.longitude);
+  if (values.longitude === '' || isNaN(numLng) || numLng < -180 || numLng > 180) {
+    newErrors.longitude = 'Longitude is required (between -180 and 180)';
+  }
+
+  if (!isEdit && !values.imageFile) {
+    newErrors.image = 'Hotel image is required';
+  } else if (values.imageFile) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(values.imageFile.type)) {
+      newErrors.image = 'Only JPG, PNG, and WebP images are allowed';
+    } else if (values.imageFile.size > 2 * 1024 * 1024) {
+      newErrors.image = 'Image size must be less than 2MB';
+    }
+  }
+
+  return newErrors;
+}
 
 function HotelForm({ initialData, onSubmit, submitting }) {
   const isEdit = Boolean(initialData && initialData.id);
@@ -20,7 +62,6 @@ function HotelForm({ initialData, onSubmit, submitting }) {
 
   const [errors, setErrors] = useState({});
 
-  // Preview local image selection and revoke URL on cleanup
   useEffect(() => {
     let createdUrl = null;
     if (imageFile) {
@@ -33,46 +74,6 @@ function HotelForm({ initialData, onSubmit, submitting }) {
       }
     };
   }, [imageFile]);
-
-  function validate(values) {
-    const newErrors = {};
-
-    if (!values.title || values.title.trim().length < 3) {
-      newErrors.title = 'Title is required (minimum 3 characters)';
-    }
-
-    if (!values.description || values.description.trim().length < 10) {
-      newErrors.description = 'Description is required (minimum 10 characters)';
-    }
-
-    const numPrice = Number(values.price);
-    if (!values.price || isNaN(numPrice) || numPrice <= 0) {
-      newErrors.price = 'Price is required and must be greater than 0';
-    }
-
-    const numLat = Number(values.latitude);
-    if (values.latitude === '' || isNaN(numLat) || numLat < -90 || numLat > 90) {
-      newErrors.latitude = 'Latitude is required (between -90 and 90)';
-    }
-
-    const numLng = Number(values.longitude);
-    if (values.longitude === '' || isNaN(numLng) || numLng < -180 || numLng > 180) {
-      newErrors.longitude = 'Longitude is required (between -180 and 180)';
-    }
-
-    if (!isEdit && !values.imageFile) {
-      newErrors.image = 'Hotel image is required';
-    } else if (values.imageFile) {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-      if (!allowedTypes.includes(values.imageFile.type)) {
-        newErrors.image = 'Only JPG, PNG, and WebP images are allowed';
-      } else if (values.imageFile.size > 2 * 1024 * 1024) {
-        newErrors.image = 'Image size must be less than 2MB';
-      }
-    }
-
-    return newErrors;
-  }
 
   function handleTitleChange(e) {
     setTitle(e.target.value);
@@ -117,7 +118,7 @@ function HotelForm({ initialData, onSubmit, submitting }) {
       imageFile,
     };
 
-    const validationErrors = validate(formValues);
+    const validationErrors = validate(formValues, isEdit);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -210,7 +211,7 @@ function HotelForm({ initialData, onSubmit, submitting }) {
 
       <div className="form-group">
         <label htmlFor="image">
-          Hotel Image {isEdit ? '(optional, choose file to replace)' : '(required)'}
+          Hotel Image {isEdit ? '(optional, select file to replace)' : '(required)'}
         </label>
         <input
           id="image"
@@ -224,7 +225,15 @@ function HotelForm({ initialData, onSubmit, submitting }) {
         {previewUrl && (
           <div className="image-preview-box">
             <p className="preview-label">Image Preview:</p>
-            <img src={previewUrl} alt="Hotel preview" className="preview-image" />
+            <img
+              src={previewUrl}
+              alt="Hotel preview"
+              className="preview-image"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = placeholderImage;
+              }}
+            />
           </div>
         )}
       </div>
@@ -238,5 +247,5 @@ function HotelForm({ initialData, onSubmit, submitting }) {
   );
 }
 
+export { validate };
 export default HotelForm;
-

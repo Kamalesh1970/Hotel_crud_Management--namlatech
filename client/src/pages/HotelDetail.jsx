@@ -6,7 +6,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Fix Leaflet default marker icon in Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
@@ -18,7 +17,9 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-// Haversine formula to calculate distance between two coordinates in km
+const placeholderImage =
+  'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22600%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20600%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22600%22%20height%3D%22400%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Ctext%20x%3D%22300%22%20y%3D%22200%22%20fill%3D%22%2364748b%22%20font-size%3D%2220%22%20font-family%3D%22sans-serif%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
+
 function calculateDistance(lat1, lon1, lat2, lon2) {
   const R = 6371;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
@@ -92,17 +93,17 @@ function HotelDetail() {
 
   if (loading) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
-        <p>Loading hotel details...</p>
+      <div className="page-container status-container">
+        <p className="status-message">Loading hotel details...</p>
       </div>
     );
   }
 
   if (error || !hotel) {
     return (
-      <div className="page-container" style={{ textAlign: 'center', padding: '3rem' }}>
+      <div className="page-container status-container">
         <h2>Hotel Not Found</h2>
-        <p style={{ margin: '1rem 0', color: '#64748b' }}>
+        <p className="status-subtext">
           We could not find the hotel with ID #{id}.
         </p>
         <Link to="/" className="nav-button">
@@ -136,7 +137,6 @@ function HotelDetail() {
         </Link>
       </div>
 
-      {/* Main Info (Desktop: side by side, Mobile: stacked) */}
       <div className="detail-layout">
         <div className="detail-image-box">
           <img
@@ -144,7 +144,8 @@ function HotelDetail() {
             alt={hotel.title}
             className="detail-large-image"
             onError={(e) => {
-              e.target.src = 'https://via.placeholder.com/600x400?text=No+Image';
+              e.target.onerror = null;
+              e.target.src = placeholderImage;
             }}
           />
         </div>
@@ -178,7 +179,6 @@ function HotelDetail() {
         </div>
       </div>
 
-      {/* Map Section */}
       <div className="map-section">
         <h3>Location Map</h3>
         <MapContainer
@@ -201,4 +201,3 @@ function HotelDetail() {
 }
 
 export default HotelDetail;
-

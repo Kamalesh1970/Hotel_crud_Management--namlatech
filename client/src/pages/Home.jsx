@@ -16,6 +16,7 @@ function Home() {
   const [maxPrice, setMaxPrice] = useState('');
   const [page, setPage] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
+  const [toastError, setToastError] = useState(false);
 
   const limit = 6;
 
@@ -68,6 +69,7 @@ function Home() {
       await dispatch(deleteHotel(id)).unwrap();
 
       // Show toast for 2 seconds
+      setToastError(false);
       setToastMessage('Hotel deleted successfully');
       setTimeout(() => {
         setToastMessage('');
@@ -89,7 +91,12 @@ function Home() {
         );
       }
     } catch (err) {
-      alert(err || 'Failed to delete hotel');
+      setToastError(true);
+      setToastMessage(err || 'Failed to delete hotel');
+      setTimeout(() => {
+        setToastMessage('');
+        setToastError(false);
+      }, 3000);
     }
   }
 
@@ -101,7 +108,11 @@ function Home() {
         <title>Hotels</title>
       </Helmet>
 
-      {toastMessage && <div className="toast-popup">{toastMessage}</div>}
+      {toastMessage && (
+        <div className={`toast-popup ${toastError ? 'toast-error' : ''}`}>
+          {toastMessage}
+        </div>
+      )}
 
       <div className="home-header">
         <div>
