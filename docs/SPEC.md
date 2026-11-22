@@ -71,19 +71,5 @@ Table: `hotels`
 
 ---
 
-## Proposed Implementation Phases
-- **Phase 1: Project Setup & Database Configuration**
-  - Initialize project structure, PostgreSQL database connection, and table creation script.
-- **Phase 2: Backend REST APIs**
-  - Express server, static image hosting, multer image upload, and CRUD endpoints with raw parameterized SQL (`pg`).
-- **Phase 3: Frontend Setup & Redux Store**
-  - Setup React SPA, Redux state/actions/reducers, router, and basic styling.
-- **Phase 4: Hotel List & Search/Filter/Pagination**
-  - Hotel card list view, search by title, price range filter, pagination, and delete popup.
-- **Phase 5: Reusable Add/Edit Form**
-  - Single reusable form with image upload preview and field validation for creating and editing hotels.
-- **Phase 6: Detail Page & Map View**
-  - Hotel detail page, map integration using coordinates, React Helmet dynamic meta tags, SEO alt tags.
-- **Phase 7: Review, Testing & Polishing**
-  - End-to-end verification and responsive UI cleanup.
+
 

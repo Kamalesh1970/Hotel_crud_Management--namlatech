@@ -90,12 +90,12 @@ router.get('/', async (req, res) => {
       conditions.push(`title ILIKE $${params.length}`);
     }
 
-    if (minPrice !== undefined && minPrice !== '') {
+    if (minPrice !== undefined && minPrice !== '' && !isNaN(Number(minPrice))) {
       params.push(Number(minPrice));
       conditions.push(`price >= $${params.length}`);
     }
 
-    if (maxPrice !== undefined && maxPrice !== '') {
+    if (maxPrice !== undefined && maxPrice !== '' && !isNaN(Number(maxPrice))) {
       params.push(Number(maxPrice));
       conditions.push(`price <= $${params.length}`);
     }

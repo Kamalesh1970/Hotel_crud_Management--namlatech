@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -17,6 +17,16 @@ function Home() {
   const [page, setPage] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
   const [toastError, setToastError] = useState(false);
+  const toastTimerRef = useRef(null);
+
+  // Clear toast timer on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   const limit = 6;
 
@@ -68,10 +78,10 @@ function Home() {
     try {
       await dispatch(deleteHotel(id)).unwrap();
 
-      // Show toast for 2 seconds
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       setToastError(false);
       setToastMessage('Hotel deleted successfully');
-      setTimeout(() => {
+      toastTimerRef.current = setTimeout(() => {
         setToastMessage('');
       }, 2000);
 
@@ -91,9 +101,10 @@ function Home() {
         );
       }
     } catch (err) {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
       setToastError(true);
       setToastMessage(err || 'Failed to delete hotel');
-      setTimeout(() => {
+      toastTimerRef.current = setTimeout(() => {
         setToastMessage('');
         setToastError(false);
       }, 3000);

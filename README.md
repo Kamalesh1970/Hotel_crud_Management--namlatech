@@ -1,89 +1,91 @@
 # Hotel Management System
 
-## Overview
-A responsive Single Page Application (SPA) for managing hotel listings with complete CRUD functionality, image uploads, price/title filters, pagination, interactive location mapping, and geolocation distance calculation.
-
-## Tech Stack
-- **Frontend:** React (Vite), Redux Toolkit, React Router, React Helmet Async, Leaflet, React-Leaflet, Axios, Vanilla CSS
-- **Backend:** Node.js, Express, Multer, pg (node-postgres), CORS, Dotenv
-- **Database:** PostgreSQL (raw parameterized SQL, no ORM)
+A responsive single-page application for managing hotel listings with search, price filters, image uploads, and interactive maps.
 
 ## Features
-- Hotel card listings with responsive grid layout (mobile, tablet, desktop).
-- Debounced keyword search by hotel title.
-- Min and max price filtering.
-- Offset/limit pagination with active state and prev/next navigation.
-- Reusable form component for both adding and editing hotels with validation and live image preview.
-- File upload handling restricting to JPEG, PNG, and WebP up to 2MB.
-- Automatic image cleanup from the filesystem on hotel deletion or image replacement.
-- Hotel details page with dynamic SEO tags (meta title, description, and Open Graph).
-- Interactive OpenStreetMap centered on hotel latitude/longitude with popup pin.
-- User geolocation button calculating straight-line distance to the hotel in kilometers.
+- Add, edit, view, and delete hotel listings.
+- Image upload with live preview and automatic server storage.
+- Old image files are removed on hotel deletion and image updates.
+- Debounced search by title and filter by price range.
+- Pagination with limit and offset controls.
+- Hotel details page with OpenStreetMap location view.
+- Distance calculation from user location using browser geolocation.
+- Dynamic SEO meta tags and image fallback for broken URLs.
 
-## Setup Instructions
+## Tech Stack
+- Frontend: React, Redux Toolkit, React Router, React Helmet Async, Leaflet, React-Leaflet, Axios, Vanilla CSS
+- Backend: Node.js, Express, Multer, pg (node-postgres), CORS, Dotenv
+- Database: PostgreSQL
+- Testing: Jest, Supertest, Vitest, React Testing Library
 
-### 1. Database Setup
-Ensure PostgreSQL is running locally or via Docker. Create the database:
+## Setup
+
+### Database
+Start the PostgreSQL container and apply the database schema:
 
 ```bash
-# Example using psql
-psql -U postgres -c "CREATE DATABASE hotel_db;"
-
-# Run schema and initial seed data
-psql -U postgres -d hotel_db -f server/schema.sql
-psql -U postgres -d hotel_db -f server/seed.sql
-```
-
-*(Alternatively, run PostgreSQL in Docker:)*
-```bash
-docker run --name hotel-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hotel_db -p 5432:5432 -d postgres:15
+docker start hotel-postgres || docker run --name hotel-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=hotel_db -p 5432:5432 -d postgres:15-alpine
+docker exec -i hotel-postgres psql -U postgres -c "CREATE DATABASE hotel_db;" 2>/dev/null || true
+docker exec -i hotel-postgres psql -U postgres -c "CREATE DATABASE hotel_test_db;" 2>/dev/null || true
 docker exec -i hotel-postgres psql -U postgres -d hotel_db < server/schema.sql
 docker exec -i hotel-postgres psql -U postgres -d hotel_db < server/seed.sql
 ```
 
-### 2. Backend Server Setup
+### Server
+Install backend dependencies and run the server:
+
 ```bash
 cd server
 npm install
-node server.js
+npm start
 ```
-The server will start on `http://localhost:5000`.
+The server runs on http://localhost:5000.
 
-### 3. Frontend Client Setup
-In a new terminal window:
+### Client
+In a separate terminal, install frontend dependencies and run the dev server:
+
 ```bash
 cd client
 npm install
 npm run dev
 ```
-The client will start on `http://localhost:3000`.
+The client runs on http://localhost:3000.
 
 ## Environment Variables
+Server configuration is loaded from `server/.env`. Reference `server/.env.example` for available options:
 
-Copy `server/.env.example` to `server/.env`:
+- `PORT`: Server port (default: 5000)
+- `CLIENT_URL`: Allowed CORS origin (default: http://localhost:3000)
+- `PGHOST`: PostgreSQL host (default: localhost)
+- `PGPORT`: PostgreSQL port (default: 5432)
+- `PGUSER`: PostgreSQL user (default: postgres)
+- `PGPASSWORD`: PostgreSQL password (default: postgres)
+- `PGDATABASE`: PostgreSQL database name (default: hotel_db)
+- `TEST_DATABASE_URL`: Connection string for running server tests
+
+## Running Tests
+
+Run backend tests:
 ```bash
-cp server/.env.example server/.env
+cd server
+npm test
 ```
 
-| Variable | Description | Default |
-|---|---|---|
-| `PORT` | Express server port | `5000` |
-| `CLIENT_URL` | Allowed CORS origin | `http://localhost:3000` |
-| `PGHOST` | PostgreSQL host | `localhost` |
-| `PGPORT` | PostgreSQL port | `5432` |
-| `PGUSER` | PostgreSQL user | `postgres` |
-| `PGPASSWORD` | PostgreSQL password | `postgres` |
-| `PGDATABASE` | Database name | `hotel_db` |
+Run frontend tests:
+```bash
+cd client
+npm test
+```
 
 ## API Endpoints
 
-| Method | Endpoint | Query / Body | Description |
-|---|---|---|---|
-| `GET` | `/api/hotels` | `?search=&minPrice=&maxPrice=&limit=&offset=` | Returns `{ data: [...], total: N }` matching filters |
-| `GET` | `/api/hotels/:id` | None | Returns single hotel record or 404 |
-| `POST` | `/api/hotels` | Multipart (`title`, `description`, `price`, `latitude`, `longitude`, `image`) | Creates a new hotel and saves image to `/uploads` |
-| `PUT` | `/api/hotels/:id` | Multipart (`title`, `description`, `price`, `latitude`, `longitude`, optional `image`) | Updates hotel and replaces image if provided |
-| `DELETE` | `/api/hotels/:id` | None | Deletes hotel record and removes image file from server |
+| Method | Path | Purpose |
+|---|---|---|
+| GET | /api/hotels | Fetch paginated list of hotels with search and price filters |
+| GET | /api/hotels/:id | Fetch a single hotel by ID |
+| POST | /api/hotels | Create a new hotel with image upload |
+| PUT | /api/hotels/:id | Update an existing hotel by ID |
+| DELETE | /api/hotels/:id | Delete a hotel by ID and remove its image file |
 
 ## Folder Structure
 
@@ -92,43 +94,39 @@ hotel-crud-management/
 ├── client/
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── HotelCard.jsx     # Card component with image, details, edit/delete
-│   │   │   ├── HotelForm.jsx     # Reusable form component with validation & preview
-│   │   │   └── Pagination.jsx    # Page buttons, prev/next controls
+│   │   │   ├── HotelCard.jsx
+│   │   │   ├── HotelForm.jsx
+│   │   │   └── Pagination.jsx
 │   │   ├── pages/
-│   │   │   ├── Home.jsx           # List view, filter bar, debounced search, deletion
-│   │   │   ├── AddHotel.jsx       # Add hotel page wrapping HotelForm
-│   │   │   ├── EditHotel.jsx      # Edit hotel page wrapping HotelForm
-│   │   │   └── HotelDetail.jsx    # Details page, Leaflet map, distance calculation
+│   │   │   ├── AddHotel.jsx
+│   │   │   ├── EditHotel.jsx
+│   │   │   ├── Home.jsx
+│   │   │   └── HotelDetail.jsx
 │   │   ├── redux/
-│   │   │   ├── store.js           # Central Redux store
-│   │   │   └── hotelsSlice.js     # Async thunks and reducers for CRUD state
-│   │   ├── App.jsx                # Router, header navigation, 404 catch-all
-│   │   ├── App.css                # Central responsive stylesheet with CSS variables
-│   │   ├── index.css              # Reset and basic typography
-│   │   └── main.jsx               # React entry point with Redux and Helmet providers
+│   │   │   ├── hotelsSlice.js
+│   │   │   └── store.js
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── HotelForm.test.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
 │   ├── index.html
 │   ├── package.json
-│   └── vite.config.js             # Proxies /api and /uploads to port 5000
+│   └── vite.config.js
 ├── server/
 │   ├── routes/
-│   │   └── hotels.js              # Express router for all hotel CRUD operations
-│   ├── uploads/                   # Statically served local directory for uploaded images
-│   ├── db.js                      # PostgreSQL connection pool with node-postgres
-│   ├── schema.sql                 # Table definition with check constraints
-│   ├── seed.sql                   # 12 initial sample hotel records
-│   ├── server.js                  # Express app initialization, static files, error middleware
-│   ├── .env.example               # Environment variables template
-│   └── package.json
+│   │   └── hotels.js
+│   ├── tests/
+│   │   └── hotels.test.js
+│   ├── uploads/
+│   ├── db.js
+│   ├── package.json
+│   ├── schema.sql
+│   ├── seed.sql
+│   └── server.js
 ├── docs/
-│   └── SPEC.md                    # Project requirements and specification
+│   └── SPEC.md
 ├── .gitignore
-└── README.md
+├── README.md
+└── requirements.txt
 ```
-
-## Design Decisions
-- **Raw Parameterized SQL over ORM:** Used `pg` with `$1, $2` parameters throughout to keep queries explicit, secure against SQL injection, and lightweight without extra ORM abstractions.
-- **Single Reusable Form Component:** Built `HotelForm.jsx` to power both create and update operations, eliminating duplicated form markup and validation logic.
-- **Client-Side Debouncing:** Debounced keyword search input by 500ms using a clean `useEffect` timer cleanup to avoid unnecessary API requests while typing.
-- **Safe Image Lifecycle Management:** Server automatically deletes previous image files from disk when a hotel is deleted or when an image is replaced, avoiding orphaned files.
-- **Pure CSS without UI Frameworks:** Handled responsiveness across mobile, tablet, and desktop using plain CSS grid, flexbox, and CSS variables for fast load times and clean maintenance.
