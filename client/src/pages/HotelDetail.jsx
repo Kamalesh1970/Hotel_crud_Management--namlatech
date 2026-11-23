@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { Helmet } from 'react-helmet-async';
 import axios from 'axios';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { formatPrice, renderStars, getImageUrl } from '../components/HotelCard';
+import { deleteHotel } from '../redux/hotelsSlice';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -36,12 +39,17 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 function HotelDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [hotel, setHotel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [distance, setDistance] = useState('');
   const [geoMessage, setGeoMessage] = useState('');
   const [geoLoading, setGeoLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   useEffect(() => {
     async function fetchHotel() {
@@ -91,6 +99,23 @@ function HotelDetail() {
     );
   }
 
+  async function handleDelete() {
+    const confirmed = window.confirm('Are you sure you want to delete this hotel?');
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await dispatch(deleteHotel(id)).unwrap();
+      setToastMessage('Hotel deleted successfully');
+      setTimeout(() => {
+        navigate('/');
+      }, 1500);
+    } catch (err) {
+      setDeleting(false);
+      alert(err || 'Failed to delete hotel');
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-container status-container">
@@ -116,7 +141,7 @@ function HotelDetail() {
   const lat = Number(hotel.latitude);
   const lng = Number(hotel.longitude);
   const shortMetaDesc = hotel.description ? hotel.description.slice(0, 150) : '';
-  const imageUrl = `${window.location.origin}/${hotel.image_path}`;
+  const imageUrl = getImageUrl(hotel.image_path);
 
   return (
     <div className="hotel-detail-page">
@@ -128,19 +153,31 @@ function HotelDetail() {
         <meta property="og:image" content={imageUrl} />
       </Helmet>
 
+      {toastMessage && <div className="toast-popup">{toastMessage}</div>}
+
       <div className="detail-top-nav">
         <Link to="/" className="back-link">
           &larr; Back to list
         </Link>
-        <Link to={`/edit/${hotel.id}`} className="edit-btn-link">
-          Edit Hotel
-        </Link>
+        <div className="detail-actions">
+          <Link to={`/edit/${hotel.id}`} className="edit-btn-link">
+            Edit Hotel
+          </Link>
+          <button
+            type="button"
+            className="delete-btn-link"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting...' : 'Delete Hotel'}
+          </button>
+        </div>
       </div>
 
       <div className="detail-layout">
         <div className="detail-image-box">
           <img
-            src={`/${hotel.image_path}`}
+            src={imageUrl}
             alt={hotel.title}
             className="detail-large-image"
             onError={(e) => {
@@ -152,7 +189,8 @@ function HotelDetail() {
 
         <div className="detail-info-box">
           <h1 className="detail-title">{hotel.title}</h1>
-          <p className="detail-price">${Number(hotel.price).toFixed(2)} / night</p>
+          {renderStars(hotel.rating, hotel.review_count)}
+          <p className="detail-price">{formatPrice(hotel.price)} / night</p>
 
           <div className="detail-coordinates">
             <span><strong>Latitude:</strong> {hotel.latitude}</span>
@@ -185,7 +223,7 @@ function HotelDetail() {
           center={[lat, lng]}
           zoom={13}
           scrollWheelZoom={false}
-          style={{ height: '350px', width: '100%', borderRadius: '8px' }}
+          style={{ height: '350px', width: '100%', borderRadius: '12px', overflow: 'hidden' }}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

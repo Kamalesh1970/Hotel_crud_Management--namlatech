@@ -21,6 +21,8 @@ describe('Hotels API Endpoints', () => {
         latitude NUMERIC(9, 6) CHECK (latitude >= -90 AND latitude <= 90),
         longitude NUMERIC(9, 6) CHECK (longitude >= -180 AND longitude <= 180),
         price NUMERIC(10, 2) CHECK (price >= 0),
+        rating NUMERIC(2, 1) DEFAULT 0 CHECK (rating >= 0 AND rating <= 5),
+        review_count INTEGER DEFAULT 0 CHECK (review_count >= 0),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
@@ -36,8 +38,11 @@ describe('Hotels API Endpoints', () => {
     if (fs.existsSync(uploadsDir)) {
       const files = fs.readdirSync(uploadsDir);
       for (const file of files) {
-        if (file !== '.gitkeep') {
-          fs.unlinkSync(path.join(uploadsDir, file));
+        if (file !== '.gitkeep' && file !== 'seed') {
+          const filePath = path.join(uploadsDir, file);
+          if (fs.statSync(filePath).isFile()) {
+            fs.unlinkSync(filePath);
+          }
         }
       }
     }

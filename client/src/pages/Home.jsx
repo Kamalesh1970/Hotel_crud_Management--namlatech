@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { fetchHotels, deleteHotel } from '../redux/hotelsSlice';
+import { fetchHotels } from '../redux/hotelsSlice';
 import HotelCard from '../components/HotelCard';
 import Pagination from '../components/Pagination';
 
@@ -19,6 +18,8 @@ function Home() {
   const [toastError, setToastError] = useState(false);
   const toastTimerRef = useRef(null);
 
+  const limit = 6;
+
   // Clear toast timer on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
@@ -27,8 +28,6 @@ function Home() {
       }
     };
   }, []);
-
-  const limit = 6;
 
   // Debounce search input by 500ms
   useEffect(() => {
@@ -71,46 +70,6 @@ function Home() {
     setPage(1);
   }
 
-  async function handleDelete(id) {
-    const confirmed = window.confirm('Are you sure you want to delete this hotel?');
-    if (!confirmed) return;
-
-    try {
-      await dispatch(deleteHotel(id)).unwrap();
-
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-      setToastError(false);
-      setToastMessage('Hotel deleted successfully');
-      toastTimerRef.current = setTimeout(() => {
-        setToastMessage('');
-      }, 2000);
-
-      // If this was the last item on current page and not on page 1, go back one page
-      if (list.length === 1 && page > 1) {
-        setPage(page - 1);
-      } else {
-        // Refresh current page
-        dispatch(
-          fetchHotels({
-            search: debouncedSearch,
-            minPrice,
-            maxPrice,
-            page,
-            limit,
-          })
-        );
-      }
-    } catch (err) {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-      setToastError(true);
-      setToastMessage(err || 'Failed to delete hotel');
-      toastTimerRef.current = setTimeout(() => {
-        setToastMessage('');
-        setToastError(false);
-      }, 3000);
-    }
-  }
-
   const totalPages = Math.ceil(total / limit);
 
   return (
@@ -125,73 +84,115 @@ function Home() {
         </div>
       )}
 
+      {/* Hero Banner */}
+      <section className="hero-banner">
+        <div className="hero-content">
+          <h1 className="hero-title">Find your stay in Coimbatore</h1>
+          <p className="hero-subtitle">
+            Discover handpicked rooms, suites, and boutique stays across the city
+          </p>
+        </div>
+      </section>
+
+      {/* Floating Filter Bar */}
+      <div className="filter-card-wrap">
+        <div className="filter-bar">
+          <div className="filter-group">
+            <label htmlFor="search">Search</label>
+            <input
+              id="search"
+              type="text"
+              placeholder="Search by hotel title..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="minPrice">Min Price</label>
+            <input
+              id="minPrice"
+              type="number"
+              placeholder="Min ₹"
+              value={minPrice}
+              onChange={handleMinPriceChange}
+            />
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="maxPrice">Max Price</label>
+            <input
+              id="maxPrice"
+              type="number"
+              placeholder="Max ₹"
+              value={maxPrice}
+              onChange={handleMaxPriceChange}
+            />
+          </div>
+
+          <button
+            type="button"
+            className="clear-btn"
+            onClick={handleClearFilters}
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      {/* Section Header */}
       <div className="home-header">
         <div>
-          <h2>Available Hotels</h2>
-          <p className="subtitle">Explore and manage our collection of stays</p>
+          <h2>Available Stays</h2>
+          <p className="subtitle">
+            {total} {total === 1 ? 'hotel' : 'hotels'} found
+          </p>
         </div>
-        <Link to="/add" className="add-hotel-btn">
-          + Add Hotel
-        </Link>
       </div>
 
-      {/* Filter Bar */}
-      <div className="filter-bar">
-        <div className="filter-group">
-          <label htmlFor="search">Search</label>
-          <input
-            id="search"
-            type="text"
-            placeholder="Search by hotel title..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="minPrice">Min Price</label>
-          <input
-            id="minPrice"
-            type="number"
-            placeholder="Min $"
-            value={minPrice}
-            onChange={handleMinPriceChange}
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor="maxPrice">Max Price</label>
-          <input
-            id="maxPrice"
-            type="number"
-            placeholder="Max $"
-            value={maxPrice}
-            onChange={handleMaxPriceChange}
-          />
-        </div>
-
-        <button
-          type="button"
-          className="clear-btn"
-          onClick={handleClearFilters}
-        >
-          Clear
-        </button>
-      </div>
-
-      {/* Loading & Error States */}
-      {loading && <p className="status-message">Loading hotels...</p>}
+      {/* Error state */}
       {error && <p className="status-message error-message">{error}</p>}
 
-      {/* Hotel Cards Grid */}
-      {!loading && !error && list.length === 0 && (
-        <p className="status-message">No hotels found.</p>
+      {/* Skeleton Loading Cards */}
+      {loading && (
+        <div className="hotel-grid">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="hotel-card skeleton-card">
+              <div className="skeleton-image" />
+              <div className="card-body">
+                <div className="skeleton-line skeleton-pill" />
+                <div className="skeleton-line skeleton-title" />
+                <div className="skeleton-line skeleton-rating" />
+                <div className="skeleton-line skeleton-desc" />
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
+      {/* Empty State */}
+      {!loading && !error && list.length === 0 && (
+        <div className="empty-state">
+          <div className="empty-badge">0 Results</div>
+          <h3>No hotels found</h3>
+          <p className="empty-text">
+            No properties matched your search. Try resetting your search or price filters.
+          </p>
+          <button
+            type="button"
+            className="nav-button"
+            onClick={handleClearFilters}
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
+
+      {/* Hotel Cards Grid with Staggered Entrance */}
       {!loading && !error && list.length > 0 && (
         <div className="hotel-grid">
-          {list.map((hotel) => (
-            <HotelCard key={hotel.id} hotel={hotel} onDelete={handleDelete} />
+          {list.map((hotel, index) => (
+            <HotelCard key={hotel.id} hotel={hotel} index={index} />
           ))}
         </div>
       )}
@@ -207,4 +208,3 @@ function Home() {
 }
 
 export default Home;
-

@@ -167,14 +167,14 @@ function HotelForm({ initialData, onSubmit, submitting }) {
 
       <div className="form-row">
         <div className="form-group">
-          <label htmlFor="price">Price (per night)</label>
+          <label htmlFor="price">Price (₹ per night)</label>
           <input
             id="price"
             type="number"
             step="0.01"
             value={price}
             onChange={handlePriceChange}
-            placeholder="e.g. 150.00"
+            placeholder="e.g. 2500"
             className={errors.price ? 'input-error' : ''}
           />
           {errors.price && <span className="error-text">{errors.price}</span>}

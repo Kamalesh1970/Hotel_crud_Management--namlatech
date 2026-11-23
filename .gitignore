@@ -10,9 +10,11 @@ server/.env
 # Production build outputs
 client/dist/
 
-# Uploaded media (keep .gitkeep so folder exists)
+# Uploaded media (keep seed images and .gitkeep tracked)
 server/uploads/*
 !server/uploads/.gitkeep
+!server/uploads/seed/
+!server/uploads/seed/**
 
 # Logs
 *.log
