@@ -8,6 +8,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { formatPrice, renderStars, getImageUrl } from '../components/HotelCard';
 import { deleteHotel } from '../redux/hotelsSlice';
+import Reviews from '../components/Reviews';
 
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -116,6 +117,16 @@ function HotelDetail() {
     }
   }
 
+  function handleReviewAdded(newStats) {
+    if (newStats) {
+      setHotel((prev) => ({
+        ...prev,
+        rating: newStats.rating,
+        review_count: newStats.review_count,
+      }));
+    }
+  }
+
   if (loading) {
     return (
       <div className="page-container status-container">
@@ -188,9 +199,17 @@ function HotelDetail() {
         </div>
 
         <div className="detail-info-box">
+          {hotel.area && <span className="area-pill">{hotel.area}</span>}
           <h1 className="detail-title">{hotel.title}</h1>
           {renderStars(hotel.rating, hotel.review_count)}
           <p className="detail-price">{formatPrice(hotel.price)} / night</p>
+          <div className="rooms-availability">
+            {Number(hotel.rooms_available) > 0 ? (
+              <span className="rooms-left-badge">{hotel.rooms_available} rooms left</span>
+            ) : (
+              <span className="sold-out-badge">Sold out</span>
+            )}
+          </div>
 
           <div className="detail-coordinates">
             <span><strong>Latitude:</strong> {hotel.latitude}</span>
@@ -234,6 +253,8 @@ function HotelDetail() {
           </Marker>
         </MapContainer>
       </div>
+
+      <Reviews hotelId={hotel.id} onReviewAdded={handleReviewAdded} />
     </div>
   );
 }

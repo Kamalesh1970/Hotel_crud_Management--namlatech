@@ -5,6 +5,7 @@ const fs = require('fs');
 require('dotenv').config();
 
 const hotelRoutes = require('./routes/hotels');
+const reviewRoutes = require('./routes/reviews');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -22,7 +23,9 @@ app.use(express.json());
 // Serve uploaded hotel images statically
 app.use('/uploads', express.static(uploadsDir));
 
+app.use('/api/hotels/:id/reviews', reviewRoutes);
 app.use('/api/hotels', hotelRoutes);
+app.use('/api/hotels', reviewRoutes);
 
 app.get('/', (req, res) => {
   res.send('Hotel Management API is running');

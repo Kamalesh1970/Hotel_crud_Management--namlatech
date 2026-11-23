@@ -42,7 +42,7 @@ function handleUpload(req, res, next) {
 }
 
 function validateHotel(body) {
-  const { title, description, price, latitude, longitude } = body;
+  const { title, description, price, latitude, longitude, area, rooms_available } = body;
 
   if (!title || !title.trim()) {
     return 'Title is required';
@@ -67,6 +67,13 @@ function validateHotel(body) {
     return 'Longitude must be between -180 and 180';
   }
 
+  if (rooms_available !== undefined && rooms_available !== '') {
+    const numRooms = Number(rooms_available);
+    if (isNaN(numRooms) || numRooms < 0 || !Number.isInteger(numRooms)) {
+      return 'Rooms available must be an integer greater than or equal to 0';
+    }
+  }
+
   return null;
 }
 
@@ -80,7 +87,7 @@ function deleteFile(filePath) {
 // GET /api/hotels (search, price filter, pagination)
 router.get('/', async (req, res) => {
   try {
-    const { search, minPrice, maxPrice, limit, offset } = req.query;
+    const { search, minPrice, maxPrice, minRating, area, limit, offset } = req.query;
 
     const conditions = [];
     const params = [];
@@ -98,6 +105,16 @@ router.get('/', async (req, res) => {
     if (maxPrice !== undefined && maxPrice !== '' && !isNaN(Number(maxPrice))) {
       params.push(Number(maxPrice));
       conditions.push(`price <= $${params.length}`);
+    }
+
+    if (minRating !== undefined && minRating !== '' && !isNaN(Number(minRating))) {
+      params.push(Number(minRating));
+      conditions.push(`rating >= $${params.length}`);
+    }
+
+    if (area && area.trim() && area.trim().toLowerCase() !== 'all') {
+      params.push(area.trim());
+      conditions.push(`area = $${params.length}`);
     }
 
     let whereSql = '';
@@ -165,12 +182,12 @@ router.post('/', handleUpload, async (req, res) => {
       return res.status(400).json({ error: 'Image file is required' });
     }
 
-    const { title, description, price, latitude, longitude } = req.body;
+    const { title, description, price, latitude, longitude, area, rooms_available } = req.body;
     const imagePath = 'uploads/' + req.file.filename;
 
     const query = `
-      INSERT INTO hotels (title, description, price, latitude, longitude, image_path)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO hotels (title, description, price, latitude, longitude, image_path, area, rooms_available)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
     const values = [
@@ -179,7 +196,9 @@ router.post('/', handleUpload, async (req, res) => {
       Number(price),
       Number(latitude),
       Number(longitude),
-      imagePath
+      imagePath,
+      area && area.trim() ? area.trim() : null,
+      rooms_available !== undefined && rooms_available !== '' ? Number(rooms_available) : 0
     ];
 
     const result = await pool.query(query, values);
@@ -208,7 +227,7 @@ router.put('/:id', handleUpload, async (req, res) => {
     }
 
     const existingHotel = existingResult.rows[0];
-    const { title, description, price, latitude, longitude } = req.body;
+    const { title, description, price, latitude, longitude, area, rooms_available } = req.body;
 
     let imagePath = existingHotel.image_path;
     if (req.file) {
@@ -216,19 +235,30 @@ router.put('/:id', handleUpload, async (req, res) => {
       imagePath = 'uploads/' + req.file.filename;
     }
 
+    const updateTitle = title !== undefined ? title.trim() : existingHotel.title;
+    const updateDescription = description !== undefined ? description.trim() : existingHotel.description;
+    const updatePrice = price !== undefined ? Number(price) : existingHotel.price;
+    const updateLat = latitude !== undefined ? Number(latitude) : existingHotel.latitude;
+    const updateLng = longitude !== undefined ? Number(longitude) : existingHotel.longitude;
+    const updateArea = area !== undefined ? (area.trim() || null) : existingHotel.area;
+    const updateRooms = rooms_available !== undefined && rooms_available !== '' ? Number(rooms_available) : existingHotel.rooms_available;
+
     const query = `
       UPDATE hotels
-      SET title = $1, description = $2, price = $3, latitude = $4, longitude = $5, image_path = $6
-      WHERE id = $7
+      SET title = $1, description = $2, price = $3, latitude = $4, longitude = $5,
+          image_path = $6, area = $7, rooms_available = $8
+      WHERE id = $9
       RETURNING *
     `;
     const values = [
-      title.trim(),
-      description.trim(),
-      Number(price),
-      Number(latitude),
-      Number(longitude),
+      updateTitle,
+      updateDescription,
+      updatePrice,
+      updateLat,
+      updateLng,
       imagePath,
+      updateArea,
+      updateRooms,
       id
     ];
 

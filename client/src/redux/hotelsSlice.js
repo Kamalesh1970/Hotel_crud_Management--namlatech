@@ -19,6 +19,8 @@ export const fetchHotels = createAsyncThunk(
       if (filters.search) params.search = filters.search;
       if (filters.minPrice !== '' && filters.minPrice !== undefined) params.minPrice = filters.minPrice;
       if (filters.maxPrice !== '' && filters.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
+      if (filters.minRating !== '' && filters.minRating !== undefined) params.minRating = filters.minRating;
+      if (filters.area && filters.area !== 'All') params.area = filters.area;
 
       const response = await axios.get('/api/hotels', { params });
       return response.data;
@@ -77,6 +79,8 @@ const initialState = {
     search: '',
     minPrice: '',
     maxPrice: '',
+    minRating: '',
+    area: '',
     page: 1,
     limit: 6,
   },
@@ -95,6 +99,14 @@ const hotelsSlice = createSlice({
       state.filters.maxPrice = action.payload.maxPrice;
       state.filters.page = 1;
     },
+    setMinRating: (state, action) => {
+      state.filters.minRating = action.payload;
+      state.filters.page = 1;
+    },
+    setArea: (state, action) => {
+      state.filters.area = action.payload;
+      state.filters.page = 1;
+    },
     setPage: (state, action) => {
       state.filters.page = action.payload;
     },
@@ -102,6 +114,8 @@ const hotelsSlice = createSlice({
       state.filters.search = '';
       state.filters.minPrice = '';
       state.filters.maxPrice = '';
+      state.filters.minRating = '';
+      state.filters.area = '';
       state.filters.page = 1;
     },
     clearError: (state) => {
@@ -165,6 +179,6 @@ const hotelsSlice = createSlice({
   },
 });
 
-export const { setSearch, setPriceRange, setPage, resetFilters, clearError } = hotelsSlice.actions;
+export const { setSearch, setPriceRange, setMinRating, setArea, setPage, resetFilters, clearError } = hotelsSlice.actions;
 export default hotelsSlice.reducer;
 

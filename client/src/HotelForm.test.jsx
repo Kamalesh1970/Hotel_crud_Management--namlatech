@@ -20,6 +20,8 @@ describe('HotelForm validate function', () => {
       price: '',
       latitude: '',
       longitude: '',
+      area: '',
+      rooms_available: '',
       imageFile: null,
     };
     const errors = validate(emptyValues);
@@ -29,6 +31,8 @@ describe('HotelForm validate function', () => {
     expect(errors.price).toBeDefined();
     expect(errors.latitude).toBeDefined();
     expect(errors.longitude).toBeDefined();
+    expect(errors.area).toBeDefined();
+    expect(errors.rooms_available).toBeDefined();
     expect(errors.image).toBeDefined();
   });
 
@@ -39,6 +43,8 @@ describe('HotelForm validate function', () => {
       price: '150.00',
       latitude: '12.971598',
       longitude: '77.594562',
+      area: 'RS Puram',
+      rooms_available: '5',
       imageFile: new File(['dummy'], 'hotel.png', { type: 'image/png' }),
     };
     const errors = validate(validValues);
@@ -53,6 +59,8 @@ describe('HotelForm validate function', () => {
       price: '100',
       latitude: '91',
       longitude: '-181',
+      area: 'RS Puram',
+      rooms_available: '5',
       imageFile: new File(['dummy'], 'hotel.png', { type: 'image/png' }),
     };
     const errors = validate(invalidCoords);
@@ -68,11 +76,29 @@ describe('HotelForm validate function', () => {
       price: '0',
       latitude: '10',
       longitude: '20',
+      area: 'RS Puram',
+      rooms_available: '5',
       imageFile: new File(['dummy'], 'hotel.png', { type: 'image/png' }),
     };
     const errors = validate(zeroPrice);
 
     expect(errors.price).toBe('Price is required and must be greater than 0');
+  });
+
+  it('rejects negative or invalid rooms_available', () => {
+    const badRooms = {
+      title: 'Valid Hotel',
+      description: 'Valid description for testing rooms.',
+      price: '2000',
+      latitude: '11',
+      longitude: '77',
+      area: 'RS Puram',
+      rooms_available: '-2',
+      imageFile: new File(['dummy'], 'hotel.png', { type: 'image/png' }),
+    };
+    const errors = validate(badRooms);
+
+    expect(errors.rooms_available).toBe('Rooms available must be a whole number 0 or greater');
   });
 });
 
@@ -107,6 +133,12 @@ describe('HotelForm Component rendering and submission', () => {
     });
     fireEvent.change(screen.getByLabelText(/Longitude/i), {
       target: { value: '75.2' },
+    });
+    fireEvent.change(screen.getByLabelText(/Area \/ Locality/i), {
+      target: { value: 'RS Puram' },
+    });
+    fireEvent.change(screen.getByLabelText(/Rooms Available/i), {
+      target: { value: '5' },
     });
 
     const file = new File(['content'], 'hotel.png', { type: 'image/png' });

@@ -5,6 +5,17 @@ import { fetchHotels } from '../redux/hotelsSlice';
 import HotelCard from '../components/HotelCard';
 import Pagination from '../components/Pagination';
 
+const COIMBATORE_AREAS = [
+  'RS Puram',
+  'Gandhipuram',
+  'Race Course',
+  'Peelamedu',
+  'Saibaba Colony',
+  'Avinashi Road',
+  'Singanallur',
+  'Ukkadam',
+];
+
 function Home() {
   const dispatch = useDispatch();
   const { list, total, loading, error } = useSelector((state) => state.hotels);
@@ -13,6 +24,8 @@ function Home() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [minRating, setMinRating] = useState('');
+  const [area, setArea] = useState('');
   const [page, setPage] = useState(1);
   const [toastMessage, setToastMessage] = useState('');
   const [toastError, setToastError] = useState(false);
@@ -39,18 +52,20 @@ function Home() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  // Fetch hotels whenever debounced search, prices, or page change
+  // Fetch hotels whenever debounced search, prices, rating, area, or page change
   useEffect(() => {
     dispatch(
       fetchHotels({
         search: debouncedSearch,
         minPrice,
         maxPrice,
+        minRating,
+        area,
         page,
         limit,
       })
     );
-  }, [dispatch, debouncedSearch, minPrice, maxPrice, page]);
+  }, [dispatch, debouncedSearch, minPrice, maxPrice, minRating, area, page]);
 
   function handleMinPriceChange(e) {
     setMinPrice(e.target.value);
@@ -62,11 +77,23 @@ function Home() {
     setPage(1);
   }
 
+  function handleRatingChange(e) {
+    setMinRating(e.target.value);
+    setPage(1);
+  }
+
+  function handleAreaChange(e) {
+    setArea(e.target.value);
+    setPage(1);
+  }
+
   function handleClearFilters() {
     setSearchInput('');
     setDebouncedSearch('');
     setMinPrice('');
     setMaxPrice('');
+    setMinRating('');
+    setArea('');
     setPage(1);
   }
 
@@ -128,6 +155,35 @@ function Home() {
               value={maxPrice}
               onChange={handleMaxPriceChange}
             />
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="ratingFilter">Rating</label>
+            <select
+              id="ratingFilter"
+              value={minRating}
+              onChange={handleRatingChange}
+            >
+              <option value="">Any</option>
+              <option value="4">4+ Stars</option>
+              <option value="3">3+ Stars</option>
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label htmlFor="areaFilter">Location</label>
+            <select
+              id="areaFilter"
+              value={area}
+              onChange={handleAreaChange}
+            >
+              <option value="">All Locations</option>
+              {COIMBATORE_AREAS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button

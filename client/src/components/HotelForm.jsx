@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { COIMBATORE_AREAS } from './HotelCard';
 
 const placeholderImage =
   'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22400%22%20height%3D%22250%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20400%20250%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22400%22%20height%3D%22250%22%20fill%3D%22%23e2e8f0%22%2F%3E%3Ctext%20x%3D%22200%22%20y%3D%22125%22%20fill%3D%22%2364748b%22%20font-size%3D%2216%22%20font-family%3D%22sans-serif%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22middle%22%3ENo%20Image%20Available%3C%2Ftext%3E%3C%2Fsvg%3E';
@@ -29,6 +30,21 @@ function validate(values, isEdit = false) {
     newErrors.longitude = 'Longitude is required (between -180 and 180)';
   }
 
+  if (!values.area || !COIMBATORE_AREAS.includes(values.area)) {
+    newErrors.area = 'Area is required';
+  }
+
+  const numRooms = Number(values.rooms_available);
+  if (
+    values.rooms_available === '' ||
+    values.rooms_available === undefined ||
+    isNaN(numRooms) ||
+    numRooms < 0 ||
+    !Number.isInteger(numRooms)
+  ) {
+    newErrors.rooms_available = 'Rooms available must be a whole number 0 or greater';
+  }
+
   if (!isEdit && !values.imageFile) {
     newErrors.image = 'Hotel image is required';
   } else if (values.imageFile) {
@@ -51,6 +67,12 @@ function HotelForm({ initialData, onSubmit, submitting }) {
   const [price, setPrice] = useState(initialData?.price || '');
   const [latitude, setLatitude] = useState(initialData?.latitude || '');
   const [longitude, setLongitude] = useState(initialData?.longitude || '');
+  const [area, setArea] = useState(initialData?.area || '');
+  const [roomsAvailable, setRoomsAvailable] = useState(
+    initialData?.rooms_available !== undefined && initialData?.rooms_available !== null
+      ? initialData.rooms_available
+      : ''
+  );
   const [imageFile, setImageFile] = useState(null);
 
   const [previewUrl, setPreviewUrl] = useState(() => {
@@ -100,6 +122,16 @@ function HotelForm({ initialData, onSubmit, submitting }) {
     if (errors.longitude) setErrors((prev) => ({ ...prev, longitude: '' }));
   }
 
+  function handleAreaChange(e) {
+    setArea(e.target.value);
+    if (errors.area) setErrors((prev) => ({ ...prev, area: '' }));
+  }
+
+  function handleRoomsChange(e) {
+    setRoomsAvailable(e.target.value);
+    if (errors.rooms_available) setErrors((prev) => ({ ...prev, rooms_available: '' }));
+  }
+
   function handleFileChange(e) {
     const file = e.target.files[0];
     setImageFile(file || null);
@@ -115,6 +147,8 @@ function HotelForm({ initialData, onSubmit, submitting }) {
       price,
       latitude,
       longitude,
+      area,
+      rooms_available: roomsAvailable,
       imageFile,
     };
 
@@ -130,6 +164,8 @@ function HotelForm({ initialData, onSubmit, submitting }) {
     formData.append('price', price);
     formData.append('latitude', latitude);
     formData.append('longitude', longitude);
+    formData.append('area', area);
+    formData.append('rooms_available', roomsAvailable);
     if (imageFile) {
       formData.append('image', imageFile);
     }
@@ -206,6 +242,43 @@ function HotelForm({ initialData, onSubmit, submitting }) {
             className={errors.longitude ? 'input-error' : ''}
           />
           {errors.longitude && <span className="error-text">{errors.longitude}</span>}
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="area">Area / Locality</label>
+          <select
+            id="area"
+            value={area}
+            onChange={handleAreaChange}
+            className={errors.area ? 'input-error' : ''}
+          >
+            <option value="">Select an area</option>
+            {COIMBATORE_AREAS.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+          {errors.area && <span className="error-text">{errors.area}</span>}
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="rooms_available">Rooms Available</label>
+          <input
+            id="rooms_available"
+            type="number"
+            min="0"
+            step="1"
+            value={roomsAvailable}
+            onChange={handleRoomsChange}
+            placeholder="e.g. 5"
+            className={errors.rooms_available ? 'input-error' : ''}
+          />
+          {errors.rooms_available && (
+            <span className="error-text">{errors.rooms_available}</span>
+          )}
         </div>
       </div>
 
